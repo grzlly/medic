@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeTestsBtn = document.getElementById('mode-tests');
     const modeCasesBtn = document.getElementById('mode-cases');
     
-    const testsSubnav = document.getElementById('tests-subnav');
+    const modeSubnav = document.getElementById('mode-subnav');
     const submodeDirectory = document.getElementById('submode-directory');
     const submodeTrainer = document.getElementById('submode-trainer');
     const trainerView = document.getElementById('trainer-view');
@@ -41,9 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let trainerQueue = [];
     let currentTrainerQuestion = null;
 
+    let casesSolved = JSON.parse(localStorage.getItem('fmzaCasesSolved') || '[]');
+    let casesErrors = JSON.parse(localStorage.getItem('fmzaCasesErrors') || '[]');
+    let casesTrainerQueue = [];
+    let currentTrainerCase = null;
+
     function saveTrainerState() {
-        localStorage.setItem('fmzaSolvedTests', JSON.stringify(solvedTests));
-        localStorage.setItem('fmzaErrorTests', JSON.stringify(errorTests));
+        if (currentMode === 'tests') {
+            localStorage.setItem('fmzaSolvedTests', JSON.stringify(solvedTests));
+            localStorage.setItem('fmzaErrorTests', JSON.stringify(errorTests));
+        } else {
+            localStorage.setItem('fmzaCasesSolved', JSON.stringify(casesSolved));
+            localStorage.setItem('fmzaCasesErrors', JSON.stringify(casesErrors));
+        }
     }
 
     function loadScript(src) {
@@ -146,7 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnTrainerReset.addEventListener('click', () => {
-        solvedTests = [];
+        if (currentMode === 'tests') {
+            solvedTests = [];
+        } else {
+            casesSolved = [];
+        }
         saveTrainerState();
         if (currentSubmode === 'trainer') initTrainer();
     });
@@ -186,10 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
         caseDetailView.classList.add('hidden');
         trainerView.classList.add('hidden');
         
+        modeSubnav.classList.add('active');
+        mainSearchContainer.style.display = currentSubmode === 'directory' ? 'block' : 'none';
+
         if (currentMode === 'tests') {
-            testsSubnav.classList.add('active');
-            mainSearchContainer.style.display = currentSubmode === 'directory' ? 'block' : 'none';
-            
             let baseTests = query ? allTests.filter(q => 
                 q.question.toLowerCase().includes(query) || 
                 (q.correct_answer && q.correct_answer.toLowerCase().includes(query)) ||
@@ -201,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             filteredItems = baseTests;
-            
             questionCount.textContent = currentFilter === 'errors' ? `${filteredItems.length} ошибок` : `${filteredItems.length} вопросов`;
 
             if (currentSubmode === 'directory') {
@@ -211,20 +224,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 questionsList.classList.add('hidden');
                 trainerView.classList.remove('hidden');
                 initTrainer();
-                return; // skip infinite scroll logic
+                return;
             }
         } else {
-            testsSubnav.classList.remove('active');
-            mainSearchContainer.style.display = 'block';
-            questionsList.classList.remove('hidden');
-            questionsList.classList.add('cases-grid');
-            
-            filteredItems = query ? allCases.filter(c => {
+            let baseCases = query ? allCases.filter(c => {
                 const combinedText = c.conditions.map(cond => cond.text).join(' ').toLowerCase();
                 const combinedQuestions = c.questions.map(q => q.text + ' ' + q.answers.map(a => a.text).join(' ')).join(' ').toLowerCase();
                 return combinedText.includes(query) || combinedQuestions.includes(query);
             }) : allCases;
-            questionCount.textContent = `${filteredItems.length} кейсов`;
+            
+            if (currentFilter === 'errors') {
+                baseCases = baseCases.filter(c => casesErrors.includes(c.conditions[0].text));
+            }
+            
+            filteredItems = baseCases;
+            questionCount.textContent = currentFilter === 'errors' ? `${filteredItems.length} ошибок` : `${filteredItems.length} кейсов`;
+            
+            if (currentSubmode === 'directory') {
+                questionsList.classList.remove('hidden');
+                questionsList.classList.add('cases-grid');
+            } else {
+                questionsList.classList.add('hidden');
+                trainerView.classList.remove('hidden');
+                initTrainer();
+                return;
+            }
         }
         
         if (filteredItems.length === 0) {
@@ -290,27 +314,54 @@ document.addEventListener('DOMContentLoaded', () => {
         return newArr;
     }
 
+    let currentTrainerCaseHadError = false;
+    let currentTrainerCaseQuestionIndex = 0;
+
     function initTrainer() {
-        if (currentFilter === 'errors') {
-            trainerQueue = filteredItems.filter(q => errorTests.includes(q.question));
+        if (currentMode === 'tests') {
+            if (currentFilter === 'errors') {
+                trainerQueue = filteredItems.filter(q => errorTests.includes(q.question));
+            } else {
+                trainerQueue = filteredItems.filter(q => 
+                    !solvedTests.includes(q.question) && !errorTests.includes(q.question)
+                );
+            }
+            trainerQueue = shuffleArray(trainerQueue);
         } else {
-            trainerQueue = filteredItems.filter(q => 
-                !solvedTests.includes(q.question) && !errorTests.includes(q.question)
-            );
+            if (currentFilter === 'errors') {
+                casesTrainerQueue = filteredItems.filter(c => casesErrors.includes(c.conditions[0].text));
+            } else {
+                casesTrainerQueue = filteredItems.filter(c => 
+                    !casesSolved.includes(c.conditions[0].text) && !casesErrors.includes(c.conditions[0].text)
+                );
+            }
+            casesTrainerQueue = shuffleArray(casesTrainerQueue);
+            currentTrainerCaseHadError = false;
+            currentTrainerCaseQuestionIndex = 0;
         }
-        trainerQueue = shuffleArray(trainerQueue);
         updateTrainerStats();
         renderTrainerCard();
     }
 
     function updateTrainerStats() {
-        trainerQueueCount.innerText = trainerQueue.length;
-        trainerSolvedCount.innerText = solvedTests.length;
-        trainerErrorCount.innerText = errorTests.length;
+        if (currentMode === 'tests') {
+            trainerQueueCount.innerText = trainerQueue.length;
+            trainerSolvedCount.innerText = solvedTests.length;
+            trainerErrorCount.innerText = errorTests.length;
+        } else {
+            trainerQueueCount.innerText = casesTrainerQueue.length;
+            trainerSolvedCount.innerText = casesSolved.length;
+            trainerErrorCount.innerText = casesErrors.length;
+        }
     }
 
     function renderTrainerCard() {
         trainerCardContainer.innerHTML = '';
+        if (currentMode === 'cases') {
+            renderCaseTrainerCard();
+            return;
+        }
+        
         if (trainerQueue.length === 0) {
             if (currentFilter === 'errors') {
                 currentFilter = 'all';
@@ -402,6 +453,144 @@ document.addEventListener('DOMContentLoaded', () => {
             card.appendChild(btn);
         });
         
+        trainerCardContainer.appendChild(card);
+    }
+
+    function renderCaseTrainerCard() {
+        if (casesTrainerQueue.length === 0) {
+            if (currentFilter === 'errors') {
+                currentFilter = 'all';
+                renderCurrentMode(searchInput.value.toLowerCase().trim());
+                return;
+            }
+            trainerFinished.classList.remove('hidden');
+            return;
+        }
+        trainerFinished.classList.add('hidden');
+
+        currentTrainerCase = casesTrainerQueue[0];
+        const caseId = currentTrainerCase.conditions[0].text;
+
+        const card = document.createElement('div');
+        card.className = 'trainer-card';
+        
+        const conditionDiv = document.createElement('div');
+        conditionDiv.className = 'case-condition-text';
+        conditionDiv.style.marginBottom = '2rem';
+        conditionDiv.innerHTML = currentTrainerCase.conditions.map(c => `<div class="condition-section"><b>${c.name}</b><br/>${parseText(c.text)}</div>`).join('');
+        card.appendChild(conditionDiv);
+
+        const qData = currentTrainerCase.questions[currentTrainerCaseQuestionIndex];
+        const qTitle = document.createElement('div');
+        qTitle.className = 'case-question-title';
+        qTitle.style.marginBottom = '1rem';
+        qTitle.style.fontWeight = '600';
+        qTitle.style.fontSize = '1.1rem';
+        qTitle.innerHTML = `Вопрос ${currentTrainerCaseQuestionIndex + 1} из ${currentTrainerCase.questions.length}: ${parseText(qData.text)}`;
+        card.appendChild(qTitle);
+
+        const answersContainer = document.createElement('div');
+        answersContainer.className = 'answers-container';
+
+        const answers = [...qData.answers];
+        const shuffledAnswers = shuffleArray(answers);
+        let answered = false;
+
+        shuffledAnswers.forEach(ans => {
+            const btn = document.createElement('div');
+            btn.className = 'trainer-answer';
+            btn.innerHTML = parseText(ans.text);
+
+            btn.addEventListener('click', () => {
+                if (answered) return;
+                answered = true;
+
+                if (ans.is_correct) {
+                    btn.classList.add('selected-correct');
+                } else {
+                    btn.classList.add('selected-wrong');
+                    currentTrainerCaseHadError = true;
+                    
+                    if (!casesErrors.includes(caseId)) {
+                        casesErrors.push(caseId);
+                        saveTrainerState();
+                        updateTrainerStats();
+                    }
+
+                    Array.from(answersContainer.querySelectorAll('.trainer-answer')).forEach(a => {
+                        if (a.dataset.correct === 'true') {
+                            a.classList.add('show-correct');
+                        }
+                    });
+                }
+
+                const controls = document.createElement('div');
+                controls.className = 'trainer-controls';
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'action-btn';
+                
+                if (currentTrainerCaseQuestionIndex < currentTrainerCase.questions.length - 1) {
+                    nextBtn.innerText = 'Дальше →';
+                    nextBtn.onclick = () => {
+                        currentTrainerCaseQuestionIndex++;
+                        renderTrainerCard();
+                    };
+                } else {
+                    nextBtn.innerText = 'Следующий кейс →';
+                    if (!currentTrainerCaseHadError) {
+                        const errIdx = casesErrors.indexOf(caseId);
+                        if (errIdx > -1) casesErrors.splice(errIdx, 1);
+                        
+                        if (!casesSolved.includes(caseId)) {
+                            casesSolved.push(caseId);
+                        }
+                        saveTrainerState();
+                        updateTrainerStats();
+                    }
+
+                    nextBtn.onclick = () => {
+                        casesTrainerQueue.shift();
+                        currentTrainerCaseQuestionIndex = 0;
+                        currentTrainerCaseHadError = false;
+                        renderTrainerCard();
+                    };
+                }
+
+                if (ans.is_correct && currentTrainerCaseQuestionIndex < currentTrainerCase.questions.length - 1) {
+                    setTimeout(() => {
+                        currentTrainerCaseQuestionIndex++;
+                        renderTrainerCard();
+                    }, 1200);
+                } else if (ans.is_correct) {
+                    // last question correct
+                    if (!currentTrainerCaseHadError) {
+                        const errIdx = casesErrors.indexOf(caseId);
+                        if (errIdx > -1) casesErrors.splice(errIdx, 1);
+                        if (!casesSolved.includes(caseId)) {
+                            casesSolved.push(caseId);
+                        }
+                        saveTrainerState();
+                        updateTrainerStats();
+                    }
+                    setTimeout(() => {
+                        casesTrainerQueue.shift();
+                        currentTrainerCaseQuestionIndex = 0;
+                        currentTrainerCaseHadError = false;
+                        renderTrainerCard();
+                    }, 1200);
+                } else {
+                    controls.appendChild(nextBtn);
+                    card.appendChild(controls);
+                }
+            });
+
+            if (ans.is_correct) {
+                btn.dataset.correct = 'true';
+            }
+            answersContainer.appendChild(btn);
+        });
+
+        card.appendChild(answersContainer);
         trainerCardContainer.appendChild(card);
     }
 

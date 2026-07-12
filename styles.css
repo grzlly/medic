@@ -473,12 +473,12 @@ img {
 }
 
 /* --- Subnav --- */
-.tests-subnav {
+.mode-subnav {
     display: none;
     margin-bottom: 1rem;
     justify-content: center;
 }
-.tests-subnav.active {
+.mode-subnav.active {
     display: flex;
 }
 .small-toggle .toggle-btn {
@@ -594,5 +594,96 @@ img {
     display: flex;
     justify-content: flex-end;
     margin-top: 1.5rem;
+}
+
+/* Mobile Adaptation */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .header h1 {
+        font-size: 1.4rem;
+        text-align: center;
+    }
+    
+    .subtitle {
+        text-align: center;
+    }
+    
+    .header-controls {
+        flex-direction: column;
+        width: 100%;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .mode-toggle {
+        width: 100%;
+        display: flex;
+    }
+    
+    .mode-toggle .toggle-btn {
+        flex: 1;
+        text-align: center;
+        padding: 10px 4px;
+        font-size: 0.85rem;
+    }
+
+    .mode-subnav {
+        width: 100%;
+    }
+    
+    .mode-subnav .mode-toggle {
+        width: 100%;
+    }
+    
+    .search-container {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    .trainer-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .case-detail-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    #btn-back-to-list {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .case-detail-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .question-card {
+        padding: 1rem;
+    }
+
+    .question-text {
+        font-size: 1.05rem;
+        margin-bottom: 1rem;
+    }
+
+    .answer {
+        padding: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .stat-badge {
+        display: block;
+        text-align: center;
+        width: 100%;
+    }
 }
 
