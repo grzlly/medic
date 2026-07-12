@@ -46,7 +46,12 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    padding: 1rem 0;
+    padding: 0.5rem 0;
+    transition: transform 0.3s ease;
+}
+
+.header--hidden {
+    transform: translateY(-100%);
 }
 
 .header-container {
@@ -55,7 +60,7 @@ body {
     padding: 0 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 /* Header Elements */
@@ -64,13 +69,13 @@ body {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: 0.5rem;
 }
 
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
@@ -125,7 +130,7 @@ body {
 
 .search-container input {
     width: 100%;
-    padding: 1rem 1rem 1rem 3rem;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
     border: 2px solid var(--border-color);
     border-radius: 12px;
     font-size: 1rem;
@@ -475,7 +480,7 @@ img {
 /* --- Subnav --- */
 .mode-subnav {
     display: none;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     justify-content: center;
 }
 .mode-subnav.active {
@@ -601,23 +606,25 @@ img {
     .header-content {
         flex-direction: column;
         align-items: stretch;
-        gap: 1rem;
+        gap: 0.5rem;
     }
     
     .header h1 {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         text-align: center;
+        margin-bottom: 0;
     }
     
     .subtitle {
         text-align: center;
+        font-size: 0.85rem;
     }
     
     .header-controls {
         flex-direction: column;
         width: 100%;
         align-items: stretch;
-        gap: 1rem;
+        gap: 0.5rem;
     }
     
     .mode-toggle {
@@ -628,7 +635,7 @@ img {
     .mode-toggle .toggle-btn {
         flex: 1;
         text-align: center;
-        padding: 10px 4px;
+        padding: 6px 4px;
         font-size: 0.85rem;
     }
 
@@ -642,7 +649,7 @@ img {
     
     .search-container {
         width: 100%;
-        margin-top: 0.5rem;
+        margin-top: 0.25rem;
     }
 
     .trainer-stats {
