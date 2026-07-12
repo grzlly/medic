@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>База вопросов: Лечебное дело</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <div>
+                <h1>База вопросов ФМЗА</h1>
+                <p class="subtitle">Лечебное дело, 2026</p>
+            </div>
+            
+            <div class="header-controls">
+                <!-- Toggle Mode -->
+                <div class="mode-toggle">
+                    <button class="toggle-btn active" id="mode-tests">Тестирование</button>
+                    <button class="toggle-btn" id="mode-cases">Ситуационные задачи</button>
+                </div>
+
+                <div class="stats">
+                    <span class="stat-badge" id="question-count">0 вопросов</span>
+                </div>
+            </div>
+
+            <!-- Sub-navigation for Tests (Справочник / Тренажер) -->
+            <div id="tests-subnav" class="tests-subnav">
+                <div class="mode-toggle small-toggle">
+                    <button class="toggle-btn active" id="submode-directory">Справочник</button>
+                    <button class="toggle-btn" id="submode-trainer">Тренажер</button>
+                </div>
+            </div>
+
+            <div class="search-container" id="main-search-container">
+                <input type="text" id="search-input" placeholder="Поиск по тексту вопроса...">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Rendered list of questions -->
+        <div id="questions-list" class="questions-list"></div>
+        <div id="no-results" class="no-results hidden">
+            По вашему запросу ничего не найдено
+        </div>
+
+        <!-- Trainer View -->
+        <div id="trainer-view" class="hidden">
+            <div class="trainer-stats">
+                <div class="stat-box queue">
+                    <div class="stat-label">В очереди</div>
+                    <div class="stat-value" id="trainer-queue-count">0</div>
+                </div>
+                <div class="stat-box solved">
+                    <div class="stat-label">Решенные</div>
+                    <div class="stat-value" id="trainer-solved-count">0</div>
+                    <button id="btn-trainer-reset" class="action-btn small-btn">Сбросить</button>
+                </div>
+                <div class="stat-box errors clickable" id="stat-box-errors">
+                    <div class="stat-label">Ошибки</div>
+                    <div class="stat-value" id="trainer-error-count">0</div>
+                    <button id="btn-trainer-retry" class="action-btn small-btn">Перерешать</button>
+                </div>
+            </div>
+            <div id="trainer-card-container"></div>
+            
+            <div id="trainer-finished" class="no-results hidden">
+                Отлично! В этой выборке больше нет вопросов для решения. <br/>
+                Сбросьте прогресс или выберите другие вопросы через поиск.
+            </div>
+        </div>
+
+        <!-- Detail View for Cases -->
+        <div id="case-detail-view" class="hidden">
+            <div class="case-detail-header">
+                <button id="btn-back-to-list" class="action-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Назад к списку
+                </button>
+                <div class="case-detail-nav">
+                    <button id="btn-prev-case" class="action-btn icon-btn" title="Предыдущая задача">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span id="case-detail-counter"></span>
+                    <button id="btn-next-case" class="action-btn icon-btn" title="Следующая задача">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="case-detail-content"></div>
+        </div>
+    </main>
+
+    <!-- Template for a single question card -->
+    <template id="question-template">
+        <article class="question-card">
+            <h2 class="question-text"></h2>
+            <div class="answers-container">
+                <div class="answer correct">
+                    <div class="answer-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div class="answer-text correct-text"></div>
+                </div>
+                <!-- Wrong answers will be injected here -->
+            </div>
+        </article>
+    </template>
+    <!-- Asciidoctor for parsing tables and images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/asciidoctor.js/1.5.9/asciidoctor.js"></script>
+    <script src="app.js?v=3"></script>
+</body>
+</html>
