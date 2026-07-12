@@ -276,6 +276,9 @@ body {
 
 .answer-text {
     flex: 1;
+    min-width: 0;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Correct Answer Styles */
@@ -566,6 +569,8 @@ img {
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 500;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .trainer-answer:hover {
