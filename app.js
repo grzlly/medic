@@ -29,24 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainSearchContainer = document.getElementById('main-search-container');
     const statBoxErrors = document.getElementById('stat-box-errors');
 
-    // Auto-collapsing header logic for mobile
-    const header = document.querySelector('.header');
-    let lastScrollY = window.scrollY;
-    
-    window.addEventListener('scroll', () => {
-        const currentScrollY = window.scrollY;
-        if (window.innerWidth <= 768) {
-            if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                header.classList.add('header--hidden');
-            } else {
-                header.classList.remove('header--hidden');
-            }
-        } else {
-            header.classList.remove('header--hidden');
-        }
-        lastScrollY = currentScrollY;
-    }, { passive: true });
-
     let allTests = [];
     let allCases = [];
     let currentMode = 'tests'; // 'tests' or 'cases'

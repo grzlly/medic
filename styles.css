@@ -47,11 +47,6 @@ body {
     top: 0;
     z-index: 100;
     padding: 0.5rem 0;
-    transition: transform 0.3s ease;
-}
-
-.header--hidden {
-    transform: translateY(-100%);
 }
 
 .header-container {
@@ -603,6 +598,10 @@ img {
 
 /* Mobile Adaptation */
 @media (max-width: 768px) {
+    .header {
+        position: relative; /* Not sticky on mobile so it scrolls away naturally */
+    }
+
     .header-content {
         flex-direction: column;
         align-items: stretch;
